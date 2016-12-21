@@ -1,3 +1,4 @@
+
 println "Host: " + java.net.InetAddress.getLocalHost()
 println "Gradle: " + gradle.gradleVersion + " JVM: " + org.gradle.internal.jvm.Jvm.current() + " Groovy: " + GroovySystem.getVersion()
 println "Build: group: '${project.group}', name: '${project.name}', version: '${project.version}'"
@@ -13,10 +14,10 @@ ext {
     scmConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
     scmDeveloperConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
     versions = [
-            'elasticsearch' : '2.3.1',
-            'jna': '4.1.0',
-            'log4j': '2.5',
-            'junit' : '4.12'
+            'elasticsearch' : '5.0.1',
+            'jna': '4.2.2',
+            'log4j': '2.6.2',
+            'junit' : '4.11'
     ]
 }
 
@@ -32,7 +33,6 @@ buildscript {
     dependencies {
         classpath 'org.ajoberstar:gradle-git:1.4.2'
         classpath 'co.riiid:gradle-github-plugin:0.4.2'
-        classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3'
     }
 }
 
@@ -61,8 +61,8 @@ sourceSets {
     }
 }
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 8
+targetCompatibility = 1.8
 
 configurations {
     wagon
@@ -95,32 +95,37 @@ tasks.withType(JavaCompile) {
 
 task makePluginDescriptor(type: Copy) {
     from 'src/main/templates'
-    into 'build/tmp/plugin'
+    into 'build/tmp/plugin/elasticsearch'
     expand([
-        'descriptor': [
-            'name': pluginName,
-            'classname': pluginClassname,
-            'description': pluginDescription,
-            'jvm': true,
-            'site': false,
-            'isolated': true,
-            'version': project.property('version'),
-            'javaVersion': project.property('targetCompatibility'),
-            'elasticsearchVersion' : versions.elasticsearch
-        ]
+            'descriptor': [
+                    'name': pluginName,
+                    'classname': pluginClassname,
+                    'description': pluginDescription,
+                    'jvm': true,
+                    'site': false,
+                    'isolated': true,
+                    'version': project.property('version'),
+                    'javaVersion': project.property('targetCompatibility'),
+                    'elasticsearchVersion' : versions.elasticsearch
+            ]
     ])
 }
 
-task buildPluginZip(type: Zip, dependsOn: [':jar', ':makePluginDescriptor']) {
+task copyJar(type: Copy, dependsOn: [':jar']) {
     from configurations.releaseJars
+    into 'build/tmp/plugin/elasticsearch'
+}
+
+task buildPluginZip(type: Zip, dependsOn: [':jar', ':makePluginDescriptor', ':copyJar']) {
+    //from configurations.releaseJars
     from 'build/tmp/plugin'
     classifier = 'plugin'
 }
 
 task unpackPlugin(type: Copy, dependsOn: [':buildPluginZip']) {
-    delete "plugins"
-    from configurations.releaseJars
-    from 'build/tmp/plugin'
+    delete "plugins/${pluginName}"
+    // from configurations.releaseJars
+    from 'build/tmp/plugin/elasticsearch'
     into "plugins/${pluginName}"
 }
 
@@ -166,7 +171,7 @@ if (project.hasProperty('signing.keyId')) {
     }
 }
 
-ext.grgit = org.ajoberstar.grgit.Grgit.open()
+// ext.grgit = org.ajoberstar.grgit.Grgit.open()
 
-apply from: 'gradle/git.gradle'
-apply from: 'gradle/publish.gradle'
+// apply from: 'gradle/git.gradle'
+// apply from: 'gradle/publish.gradle'

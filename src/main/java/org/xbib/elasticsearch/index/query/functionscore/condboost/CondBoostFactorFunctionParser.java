@@ -1,10 +1,9 @@
 
 package org.xbib.elasticsearch.index.query.functionscore.condboost;
 
-import org.elasticsearch.common.lucene.search.function.ScoreFunction;
+import org.elasticsearch.common.ParsingException;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.index.query.QueryParseContext;
-import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionParser;
 
 import java.io.IOException;
@@ -29,17 +28,18 @@ import java.util.Locale;
  *     }
  * </pre>
  */
-public class CondBoostFactorFunctionParser implements ScoreFunctionParser {
+public class CondBoostFactorFunctionParser implements ScoreFunctionParser<CondBoostFactorFunctionBuilder> {
 
     static String[] NAMES = { "cond_boost", "condBoost" };
 
-    @Override
-    public String[] getNames() {
+    public static String[] getNAMES() {
         return NAMES;
     }
 
     @Override
-    public ScoreFunction parse(QueryParseContext parseContext, XContentParser parser) throws IOException, QueryParsingException {
+    public CondBoostFactorFunctionBuilder fromXContent(QueryParseContext context) throws IOException, ParsingException {
+        XContentParser parser = context.parser();
+
         String currentFieldName = null;
         CondBoostEntry condBoost = new CondBoostEntry();
         float defaultBoost = 1.0f;
@@ -62,18 +62,19 @@ public class CondBoostFactorFunctionParser implements ScoreFunctionParser {
                             modifier = CondBoostFactorFunction.Modifier.valueOf(parser.text().toUpperCase(Locale.ROOT));
                             break;
                         case "cond":
-                            condBoost = parseCond(parseContext, parser, currentFieldName);
+                            condBoost = parseCond(parser, currentFieldName);
                             break;
                         default:
-                            throw new QueryParsingException(parseContext, NAMES[0] + " query does not support [" + currentFieldName + "]");
+                            throw new ParsingException(parser.getTokenLocation(), NAMES[0] + " query does not support [" + currentFieldName + "]");
                     }
                 }
             }
         }
-        return new CondBoostFactorFunction(parseContext,condBoost, defaultBoost, boostFactor, modifier);
+
+        return new CondBoostFactorFunctionBuilder(defaultBoost, boostFactor, modifier, condBoost);
     }
 
-    private CondBoostEntry parseCond(QueryParseContext parseContext, XContentParser parser, String currentFieldName) throws IOException {
+    private CondBoostEntry parseCond(XContentParser parser, String currentFieldName) throws IOException {
         XContentParser.Token token;
         CondBoostEntry entry = new CondBoostEntry();
 
@@ -89,8 +90,7 @@ public class CondBoostFactorFunctionParser implements ScoreFunctionParser {
                         entry.fieldName = parser.text();
                         break;
                     case ("fieldValues"):
-                        int i = 6;
-                        HashSet<String> fieldValueList = new HashSet<String>();
+                        HashSet<String> fieldValueList = new HashSet<>();
                         while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
                             if (token.isValue()){
                                 String fieldValue = parser.text();
@@ -107,4 +107,30 @@ public class CondBoostFactorFunctionParser implements ScoreFunctionParser {
         return entry;
     }
 
+//    private List<CondBoostEntry> parseCondArray(XContentParser parser, String currentFieldName) throws IOException {
+//        XContentParser.Token token;
+//        List<CondBoostEntry> condArray = new LinkedList<>();
+//        while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
+//            if (token != XContentParser.Token.START_OBJECT) {
+//                throw new ParsingException(parser.getTokenLocation(), "malformed query, expected a "
+//                        + XContentParser.Token.START_OBJECT + " while parsing cond boost array, but got a " + token);
+//            } else {
+//                CondBoostEntry entry = new CondBoostEntry();
+//                while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
+//                    if (token == XContentParser.Token.FIELD_NAME) {
+//                        currentFieldName = parser.currentName();
+//                    } else {
+//                        if (CondBoostEntry.BOOST.equals(currentFieldName)) {
+//                            entry.boost = parser.floatValue();
+//                        } else {
+//                            entry.fieldName = currentFieldName;
+//                            entry.fieldValue = parser.text();
+//                        }
+//                    }
+//                }
+//                condArray.add(entry);
+//            }
+//        }
+//        return condArray;
+//    }
 }

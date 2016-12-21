@@ -1,23 +1,21 @@
 package org.xbib.elasticsearch.plugin.condboost;
 
 import org.elasticsearch.plugins.Plugin;
-import org.elasticsearch.search.SearchModule;
+import org.elasticsearch.plugins.SearchPlugin;
+import org.xbib.elasticsearch.index.query.functionscore.condboost.CondBoostFactorFunctionBuilder;
 import org.xbib.elasticsearch.index.query.functionscore.condboost.CondBoostFactorFunctionParser;
 
-public class CondBoostPlugin extends Plugin {
+import java.util.Collections;
+import java.util.List;
 
+public class CondBoostPlugin extends Plugin implements SearchPlugin {
     @Override
-    public String name() {
-        return "condboost";
+    public List<ScoreFunctionSpec<?>> getScoreFunctions() {
+        return Collections.singletonList(new ScoreFunctionSpec<>(
+                CondBoostFactorFunctionParser.getNAMES()[0],
+                CondBoostFactorFunctionBuilder::new,
+                CondBoostFactorFunctionBuilder.PARSER
+        ));
     }
-
-    @Override
-    public String description() {
-        return "Conditional boost plugin";
-    }
-
-    public void onModule(SearchModule searchModule) {
-        searchModule.registerFunctionScoreParser(CondBoostFactorFunctionParser.class);
-    }
-
 }
+

@@ -1,7 +1,6 @@
 
 package org.xbib.elasticsearch.test;
 
-import org.elasticsearch.Version;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.internal.InternalSettingsPreparer;
@@ -13,7 +12,7 @@ import java.util.Collection;
 public class MockNode extends Node {
 
     public MockNode(Settings settings, Collection<Class<? extends Plugin>> classpathPlugins) {
-        super(InternalSettingsPreparer.prepareEnvironment(settings, null), Version.CURRENT, classpathPlugins);
+        super(InternalSettingsPreparer.prepareEnvironment(settings, null), classpathPlugins);
     }
 
     public MockNode(Settings settings, Class<? extends Plugin> classpathPlugin) {
