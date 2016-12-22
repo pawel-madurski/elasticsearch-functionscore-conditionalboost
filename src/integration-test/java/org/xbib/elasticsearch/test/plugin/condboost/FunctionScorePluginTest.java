@@ -5,7 +5,10 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.search.SearchHits;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.xbib.elasticsearch.index.query.functionscore.condboost.CondBoostFactorFunction;
 import org.xbib.elasticsearch.index.query.functionscore.condboost.CondBoostFactorFunctionBuilder;
@@ -63,24 +66,30 @@ public class FunctionScorePluginTest extends NodeTestUtils {
                 .modifier(CondBoostFactorFunction.Modifier.NONE)
                 .condBoost("product", condBoostFieldValues, 5.0f);
 
-        // TODO: fix test
-//        SearchRequest searchRequest = searchRequest()
-//                .source(searchSource()
-//                        .explain(true)
-//                        .query(functionScoreQuery(matchAllQuery(), cbfb3).add(cbfb3).add(cbfb2).add(cbfb)));
-//
-//        SearchResponse sr = client("1").search(searchRequest).actionGet();
-//        SearchHits sh = sr.getHits();
-//
-//        //for (int i = 0; i < sh.hits().length; i++) {
-//        //     System.err.println( sh.getAt(i).getId() + " " + sh.getAt(i).getScore() + " -->" + sh.getAt(i).getSource());
-//        //}
-//
-//        assertEquals(sh.hits().length, 3);
-//
-//        assertEquals("3", sh.getAt(0).getId());
-//        assertEquals("1", sh.getAt(1).getId());
-//        assertEquals("2", sh.getAt(2).getId());
+        FunctionScoreQueryBuilder.FilterFunctionBuilder[] builders = new FunctionScoreQueryBuilder.FilterFunctionBuilder[] {
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(cbfb3),
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(cbfb2),
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(cbfb),
+        };
+
+        SearchRequest searchRequest = searchRequest()
+                .source(searchSource()
+                        .explain(true)
+                        .query(functionScoreQuery(matchAllQuery(), builders))
+                );
+
+        SearchResponse sr = client("1").search(searchRequest).actionGet();
+        SearchHits sh = sr.getHits();
+
+        //for (int i = 0; i < sh.hits().length; i++) {
+        //     System.err.println( sh.getAt(i).getId() + " " + sh.getAt(i).getScore() + " -->" + sh.getAt(i).getSource());
+        //}
+
+        assertEquals(sh.hits().length, 3);
+
+        assertEquals("3", sh.getAt(0).getId());
+        assertEquals("1", sh.getAt(1).getId());
+        assertEquals("2", sh.getAt(2).getId());
 
     }
 

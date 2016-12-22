@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class MockNode extends Node {
+    public MockNode(Settings settings) {
+        super(settings);
+    }
 
     public MockNode(Settings settings, Collection<Class<? extends Plugin>> classpathPlugins) {
         super(InternalSettingsPreparer.prepareEnvironment(settings, null), classpathPlugins);

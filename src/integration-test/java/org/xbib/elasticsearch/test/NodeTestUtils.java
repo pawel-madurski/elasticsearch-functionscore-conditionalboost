@@ -119,7 +119,8 @@ public class NodeTestUtils {
                 .put("cluster.routing.allocation.disk.threshold_enabled", false)
                 //.put("discovery.zen.multicast.enabled", true)
                 //.put("discovery.zen.multicast.ping_timeout", "5s")
-                .put("http.enabled", true)
+                .put("http.enabled", false)
+                .put("transport.type", "local")
                 //.put("threadpool.bulk.size", Runtime.getRuntime().availableProcessors())
                 //.put("threadpool.bulk.queue_size", 16 * Runtime.getRuntime().availableProcessors()) // default is 50, too low
                 //.put("index.number_of_replicas", 0)
@@ -129,8 +130,7 @@ public class NodeTestUtils {
     }
 
     protected String getHome() {
-        return "c:\\Users\\miroslaw.piatkowski\\Documents\\Elastic\\bin\\elasticsearch-5.0.1";
-        // return System.getProperty("path.home");
+        return System.getProperty("path.home");
     }
 
     public void startNode(String id) throws IOException, NodeValidationException {

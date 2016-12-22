@@ -137,7 +137,7 @@ task integrationTest(type: Test, dependsOn: ['unpackPlugin']) {
     // without this trick to remove identical jars from classpath, an Elasticsearch bug whines about a "jar hell"
     classpath -= configurations.releaseJars
     outputs.upToDateWhen { false }
-    systemProperty 'path.home', projectDir.absolutePath
+    systemProperty 'path.home', projectDir.absolutePath + '\\test'
     testLogging.showStandardStreams = false
 }
 
